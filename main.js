@@ -1,10 +1,11 @@
 (function () {
   let isRaging = false;
   let characterId;
+  let rageModifier;
   let isDarkMode = document.querySelector('.ct-character-sheet')?.classList.contains('ct-character-sheet--dark-mode');
   const darkBg = "#10161ADB";
   const lightBg = "#FEFEFE";
-  const rageBonus = '<span class="rage-bonus" style="color: #E40712;">+2</span>';
+  const rageBonus = '<span class="rage-bonus" style="color: #E40712;">{{rageModifier}}</span>';
   const rageMode = '<div id="rageMode" class="MuiTypography-root MuiTypography-h4 ddb-character-app-sn0l9p" style="font-family: &quot;Roboto Condensed&quot;; text-align: center;font-weight: 700;color: #E40712;"><p>RAGE MODE</p></div>';
   const advSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="ddbc-svg ddbc-advantage-svg ddbc-svg--positive"><g><path d="M13.3665 12.5235L12.009 8.78235L10.6516 12.5235H13.3665Z" fill="#00c680"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M12.241 1.13253C12.0909 1.05 11.9091 1.05 11.759 1.13252L2.25904 6.35753C2.09927 6.4454 2 6.61329 2 6.79563V17.2044C2 17.3867 2.09927 17.5546 2.25904 17.6425L11.759 22.8675C11.9091 22.95 12.0909 22.95 12.241 22.8675L21.741 17.6425C21.9007 17.5546 22 17.3867 22 17.2044V6.79563C22 6.61329 21.9007 6.4454 21.741 6.35753L12.241 1.13253ZM18 17.5H15.1222L14.1991 14.9412H9.80091L8.87783 17.5H6L10.5611 5.5H13.4389L18 17.5Z" fill="#00c680"></path></g></svg>';
   const skillAdv = '<div class="strength-adv ct-skills__col--adjustments" style="border-bottom-color: rgba(85, 87, 82, 0.4);"><span class="ddbc-tooltip ct-skills__adjustment ddbc-advantage-icon" data-tippy="" data-original-title="Advantage"><span aria-label="Advantage">' + advSvg + '</span></span></div>';
@@ -29,7 +30,7 @@
     document.querySelectorAll('.ddbc-combat-attack__damage .ddbc-damage__value').forEach((damage) => {
       if (!damage.getElementsByClassName('rage-mode').length) {
         const bonus = document.createElement('span');
-        bonus.innerHTML = rageBonus;
+        bonus.innerHTML = rageBonus.replace('{{rageModifier}}', rageModifier);
         damage.appendChild(bonus);
       }
     });
@@ -76,7 +77,7 @@
 
     // Save to storage
     if (characterId) {
-      chrome.storage.sync.set({[`dndRage__${characterId}`]: { isRaging: true }});
+      chrome.storage.sync.set({ [`dndRage__${characterId}`]: { isRaging: true } });
     }
   }
 
@@ -108,20 +109,26 @@
 
     // Save to storage
     if (characterId) {
-      chrome.storage.sync.set({[`dndRage__${characterId}`]: { isRaging: false }});
+      chrome.storage.sync.set({ [`dndRage__${characterId}`]: { isRaging: false } });
     }
   }
 
   function init() {
     isDarkMode = document.querySelector('.ct-character-sheet')?.classList.contains('ct-character-sheet--dark-mode');
+
+    // extract character id from url
     const pieces = window.location.href.split('/');
     const index = pieces.findIndex((part) => part === 'characters');
     if (index > -1 && pieces.length >= index + 2) {
       characterId = pieces[index + 1];
     }
-    
+
     const rageContainer = findRage();
     if (rageContainer) {
+      // extract rage modifie
+      rageModifier = rageContainer.querySelector('[data-original-title="scalevalue#signed"] .ddbc-snippet__tag')?.textContent.trim();
+
+      // listen for rage uses to be used
       const rageUses = rageContainer.querySelectorAll('.ct-feature-snippet__limited-use .ct-slot-manager__slot[role="checkbox"]');
       rageUses.forEach((use) => {
         use.addEventListener('click', (elem) => {
@@ -138,7 +145,7 @@
 
     // load from local storage
     if (characterId) {
-      chrome.storage.sync.get([`dndRage__${characterId}`], function(characterStatus) {
+      chrome.storage.sync.get([`dndRage__${characterId}`], function (characterStatus) {
         isRaging = characterStatus?.[`dndRage__${characterId}`]?.isRaging;
         if (isRaging) {
           enterRageMode(rageContainer);
