@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "version": "0.0.1",
+  "name": "Beyond Rage",
+  "description": "Modifies Dndbeyond character sheet to reflect rage benefits while raging.",
+  "icons": {
+    "16": "img/Icon-16.png",
+    "32": "img/Icon-32.png",
+    "48": "img/Icon-48.png",
+    "128": "img/Icon-128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.dndbeyond.com/*"
+      ],
+      "js": ["main.js"],
+      "css": ["main.css"]
+    }
+  ],
+  "permissions": [
+    "storage"
+  ]
+}
